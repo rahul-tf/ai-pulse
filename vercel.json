@@ -4,11 +4,6 @@
   "devCommand": "next dev",
   "installCommand": "npm install",
   "regions": ["iad1"],
-  "env": {
-    "APIFY_TOKEN": "@apify-token",
-    "REVALIDATE_SECONDS": "3600",
-    "NEWS_PER_SECTION": "5"
-  },
   "headers": [
     {
       "source": "/api/(.*)",
