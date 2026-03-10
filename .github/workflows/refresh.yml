@@ -1,0 +1,29 @@
+name: 🔄 Refresh AI News Feed
+
+on:
+  schedule:
+    # Every hour at :05 past the hour
+    - cron: '5 * * * *'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Manual refresh reason'
+        required: false
+        default: 'Manual trigger'
+
+jobs:
+  refresh:
+    name: Trigger Vercel Revalidation
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚀 Trigger Vercel deploy hook
+        run: |
+          curl -s -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}" \
+            -d '{"deploymentId":"latest"}' \
+            -H "Content-Type: application/json"
+          echo "✅ Revalidation triggered at $(date -u)"
+
+      - name: 📊 Log refresh event
+        run: |
+          echo "Feed refreshed at: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "Trigger: ${{ github.event_name }}"
