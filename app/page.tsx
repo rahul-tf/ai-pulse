@@ -3,6 +3,8 @@ import { fetchAllNews, type NewsFeed, type NewsItem, type NewsCategory } from '@
 import { Suspense } from 'react';
 import ClientDashboard from '@/components/ClientDashboard';
 
+// Force dynamic rendering — Apify calls can exceed static generation timeout
+export const dynamic = 'force-dynamic';
 export const revalidate = parseInt(process.env.REVALIDATE_SECONDS || '3600');
 
 export default async function Home() {
@@ -18,7 +20,7 @@ export default async function Home() {
 
 function LoadingSkeleton() {
   return (
-    <div style={{ background: '#09090b', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ background: 'var(--bg, #09090b)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ color: '#f59e0b', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.875rem' }}>
         ⚡ Loading AI Pulse…
       </div>
