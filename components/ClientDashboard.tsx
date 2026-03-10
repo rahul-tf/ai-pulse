@@ -8,6 +8,8 @@ interface Props {
   generatedAt: string;
 }
 
+type Theme = 'dark' | 'light';
+
 const TAG_COLORS: Record<string, string> = {
   LLM: '#6366f1', agent: '#f59e0b', agents: '#f59e0b', GPT: '#10b981',
   Claude: '#ec4899', Gemini: '#3b82f6', reasoning: '#8b5cf6',
@@ -30,9 +32,152 @@ function timeAgo(iso: string): string {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-function NewsCard({ item, index }: { item: NewsItem; index: number }) {
+function NewsCard({ item, index, isResearch }: { item: NewsItem; index: number; isResearch?: boolean }) {
   const [hovered, setHovered] = useState(false);
 
+  // Research papers get an enhanced layout with full summary + explicit link
+  if (isResearch) {
+    return (
+      <div
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          display: 'block',
+          padding: '18px',
+          borderRadius: '6px',
+          background: hovered ? 'var(--bg-hover)' : 'transparent',
+          border: `1px solid ${hovered ? 'var(--border-hover)' : 'var(--border)'}`,
+          transition: 'all 0.2s ease',
+          transform: hovered ? 'translateX(3px)' : 'translateX(0)',
+          animationDelay: `${index * 0.06}s`,
+          animation: 'slideUp 0.4s ease-out both',
+        }}
+      >
+        {/* Number + source row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+          <span style={{
+            fontFamily: 'JetBrains Mono, monospace',
+            fontSize: '0.65rem',
+            color: 'var(--text-number)',
+            minWidth: '16px',
+          }}>
+            {String(index + 1).padStart(2, '0')}
+          </span>
+          <span style={{
+            fontFamily: 'JetBrains Mono, monospace',
+            fontSize: '0.6rem',
+            color: 'var(--text-muted)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.06em',
+            background: 'var(--source-bg)',
+            padding: '2px 6px',
+            borderRadius: '2px',
+          }}>
+            {item.source}
+          </span>
+          <span style={{
+            marginLeft: 'auto',
+            fontFamily: 'JetBrains Mono, monospace',
+            fontSize: '0.6rem',
+            color: 'var(--text-faint)',
+          }}>
+            {timeAgo(item.publishedAt)}
+          </span>
+        </div>
+
+        {/* Title */}
+        <h3 style={{
+          fontFamily: 'Syne, sans-serif',
+          fontSize: '0.9rem',
+          fontWeight: 600,
+          color: hovered ? 'var(--text-heading)' : 'var(--text-secondary)',
+          lineHeight: 1.4,
+          marginBottom: '10px',
+          letterSpacing: '-0.01em',
+        }}>
+          {item.title}
+        </h3>
+
+        {/* Enhanced summary for research papers - show full summary */}
+        <div style={{
+          fontFamily: 'Source Serif 4, serif',
+          fontSize: '0.82rem',
+          color: 'var(--text-muted)',
+          lineHeight: 1.7,
+          marginBottom: '12px',
+          padding: '10px 12px',
+          background: 'var(--bg-card)',
+          borderLeft: '3px solid #6366f1',
+          borderRadius: '0 4px 4px 0',
+        }}>
+          {item.summary}
+        </div>
+
+        {/* Explicit link */}
+        <a
+          href={item.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontFamily: 'JetBrains Mono, monospace',
+            fontSize: '0.68rem',
+            color: '#6366f1',
+            textDecoration: 'none',
+            padding: '5px 10px',
+            borderRadius: '4px',
+            border: '1px solid rgba(99, 102, 241, 0.25)',
+            background: 'rgba(99, 102, 241, 0.08)',
+            marginBottom: '10px',
+            transition: 'all 0.15s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(99, 102, 241, 0.15)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(99, 102, 241, 0.08)';
+          }}
+        >
+          Read paper &rarr;
+          <span style={{ fontSize: '0.6rem', color: 'var(--text-dim)', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {item.url}
+          </span>
+        </a>
+
+        {/* Tags + read time */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
+          {item.tags.slice(0, 4).map((tag) => (
+            <span key={tag} style={{
+              fontFamily: 'JetBrains Mono, monospace',
+              fontSize: '0.58rem',
+              letterSpacing: '0.04em',
+              padding: '2px 6px',
+              borderRadius: '2px',
+              color: TAG_COLORS[tag] || 'var(--text-muted)',
+              border: `1px solid ${TAG_COLORS[tag] ? TAG_COLORS[tag] + '30' : 'var(--tag-border-fallback)'}`,
+              background: TAG_COLORS[tag] ? TAG_COLORS[tag] + '10' : 'transparent',
+            }}>
+              {tag}
+            </span>
+          ))}
+          {item.readTime && (
+            <span style={{
+              marginLeft: 'auto',
+              fontFamily: 'JetBrains Mono, monospace',
+              fontSize: '0.58rem',
+              color: 'var(--text-number)',
+            }}>
+              {item.readTime} min read
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Default card for non-research items
   return (
     <a
       href={item.url}
@@ -44,8 +189,8 @@ function NewsCard({ item, index }: { item: NewsItem; index: number }) {
         display: 'block',
         padding: '16px',
         borderRadius: '4px',
-        background: hovered ? 'rgba(255,255,255,0.04)' : 'transparent',
-        border: `1px solid ${hovered ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.05)'}`,
+        background: hovered ? 'var(--bg-hover)' : 'transparent',
+        border: `1px solid ${hovered ? 'var(--border-hover)' : 'var(--border)'}`,
         transition: 'all 0.2s ease',
         textDecoration: 'none',
         cursor: 'pointer',
@@ -59,7 +204,7 @@ function NewsCard({ item, index }: { item: NewsItem; index: number }) {
         <span style={{
           fontFamily: 'JetBrains Mono, monospace',
           fontSize: '0.65rem',
-          color: '#3f3f46',
+          color: 'var(--text-number)',
           minWidth: '16px',
         }}>
           {String(index + 1).padStart(2, '0')}
@@ -67,10 +212,10 @@ function NewsCard({ item, index }: { item: NewsItem; index: number }) {
         <span style={{
           fontFamily: 'JetBrains Mono, monospace',
           fontSize: '0.6rem',
-          color: '#71717a',
+          color: 'var(--text-muted)',
           textTransform: 'uppercase',
           letterSpacing: '0.06em',
-          background: 'rgba(255,255,255,0.04)',
+          background: 'var(--source-bg)',
           padding: '2px 6px',
           borderRadius: '2px',
         }}>
@@ -80,7 +225,7 @@ function NewsCard({ item, index }: { item: NewsItem; index: number }) {
           marginLeft: 'auto',
           fontFamily: 'JetBrains Mono, monospace',
           fontSize: '0.6rem',
-          color: '#52525b',
+          color: 'var(--text-faint)',
         }}>
           {timeAgo(item.publishedAt)}
         </span>
@@ -91,7 +236,7 @@ function NewsCard({ item, index }: { item: NewsItem; index: number }) {
         fontFamily: 'Syne, sans-serif',
         fontSize: '0.875rem',
         fontWeight: 600,
-        color: hovered ? '#f4f4f5' : '#d4d4d8',
+        color: hovered ? 'var(--text-heading)' : 'var(--text-secondary)',
         lineHeight: 1.4,
         marginBottom: '8px',
         letterSpacing: '-0.01em',
@@ -103,7 +248,7 @@ function NewsCard({ item, index }: { item: NewsItem; index: number }) {
       <p style={{
         fontFamily: 'Source Serif 4, serif',
         fontSize: '0.78rem',
-        color: '#71717a',
+        color: 'var(--text-muted)',
         lineHeight: 1.6,
         marginBottom: '10px',
         display: '-webkit-box',
@@ -123,8 +268,8 @@ function NewsCard({ item, index }: { item: NewsItem; index: number }) {
             letterSpacing: '0.04em',
             padding: '2px 6px',
             borderRadius: '2px',
-            color: TAG_COLORS[tag] || '#71717a',
-            border: `1px solid ${TAG_COLORS[tag] ? TAG_COLORS[tag] + '30' : '#27272a'}`,
+            color: TAG_COLORS[tag] || 'var(--text-muted)',
+            border: `1px solid ${TAG_COLORS[tag] ? TAG_COLORS[tag] + '30' : 'var(--tag-border-fallback)'}`,
             background: TAG_COLORS[tag] ? TAG_COLORS[tag] + '10' : 'transparent',
           }}>
             {tag}
@@ -135,7 +280,7 @@ function NewsCard({ item, index }: { item: NewsItem; index: number }) {
             marginLeft: 'auto',
             fontFamily: 'JetBrains Mono, monospace',
             fontSize: '0.58rem',
-            color: '#3f3f46',
+            color: 'var(--text-number)',
           }}>
             {item.readTime} min
           </span>
@@ -147,13 +292,14 @@ function NewsCard({ item, index }: { item: NewsItem; index: number }) {
 
 function FeedSection({ feed, isActive }: { feed: NewsFeed; isActive: boolean }) {
   if (!isActive) return null;
+  const isResearch = feed.category === 'research';
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: isResearch ? '8px' : '2px' }}>
       {feed.items.length === 0 ? (
         <div style={{
           padding: '32px',
           textAlign: 'center',
-          color: '#52525b',
+          color: 'var(--text-faint)',
           fontFamily: 'JetBrains Mono, monospace',
           fontSize: '0.75rem',
         }}>
@@ -161,7 +307,7 @@ function FeedSection({ feed, isActive }: { feed: NewsFeed; isActive: boolean }) 
         </div>
       ) : (
         feed.items.map((item, idx) => (
-          <NewsCard key={item.id} item={item} index={idx} />
+          <NewsCard key={item.id} item={item} index={idx} isResearch={isResearch} />
         ))
       )}
     </div>
@@ -198,7 +344,7 @@ function CategoryTab({
         fontFamily: 'Syne, sans-serif',
         fontSize: '0.75rem',
         fontWeight: isActive ? 600 : 400,
-        color: isActive ? feed.color : '#71717a',
+        color: isActive ? feed.color : 'var(--text-muted)',
         letterSpacing: '0.01em',
       }}>
         {feed.label}
@@ -206,13 +352,37 @@ function CategoryTab({
       <span style={{
         fontFamily: 'JetBrains Mono, monospace',
         fontSize: '0.58rem',
-        color: isActive ? feed.color : '#3f3f46',
-        background: isActive ? feed.color + '20' : 'rgba(255,255,255,0.04)',
+        color: isActive ? feed.color : 'var(--text-number)',
+        background: isActive ? feed.color + '20' : 'var(--source-bg)',
         padding: '1px 5px',
         borderRadius: '2px',
       }}>
         {feed.items.length}
       </span>
+    </button>
+  );
+}
+
+function ThemeToggle({ theme, onToggle }: { theme: Theme; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '34px',
+        height: '34px',
+        borderRadius: '6px',
+        border: '1px solid var(--border)',
+        background: 'var(--bg-card)',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        fontSize: '1rem',
+      }}
+    >
+      {theme === 'dark' ? '\u2600\uFE0F' : '\uD83C\uDF19'}
     </button>
   );
 }
@@ -223,8 +393,8 @@ function TickerBar({ feeds }: { feeds: NewsFeed[] }) {
 
   return (
     <div style={{
-      background: '#111113',
-      borderBottom: '1px solid rgba(255,255,255,0.06)',
+      background: 'var(--ticker-bg)',
+      borderBottom: '1px solid var(--border)',
       overflow: 'hidden',
       height: '32px',
       display: 'flex',
@@ -233,7 +403,7 @@ function TickerBar({ feeds }: { feeds: NewsFeed[] }) {
       <div style={{
         flexShrink: 0,
         padding: '0 12px',
-        background: '#f59e0b',
+        background: 'var(--amber)',
         height: '100%',
         display: 'flex',
         alignItems: 'center',
@@ -268,7 +438,7 @@ function TickerBar({ feeds }: { feeds: NewsFeed[] }) {
                 gap: '8px',
                 padding: '0 24px',
                 textDecoration: 'none',
-                borderRight: '1px solid rgba(255,255,255,0.06)',
+                borderRight: '1px solid var(--border)',
                 height: '32px',
               }}
             >
@@ -278,7 +448,7 @@ function TickerBar({ feeds }: { feeds: NewsFeed[] }) {
               <span style={{
                 fontFamily: 'JetBrains Mono, monospace',
                 fontSize: '0.68rem',
-                color: '#a1a1aa',
+                color: 'var(--text-muted)',
                 whiteSpace: 'nowrap',
                 maxWidth: '320px',
                 overflow: 'hidden',
@@ -298,14 +468,14 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
   return (
     <div style={{
       padding: '12px 16px',
-      background: '#111113',
-      border: '1px solid rgba(255,255,255,0.06)',
+      background: 'var(--bg-card)',
+      border: '1px solid var(--border)',
       borderRadius: '4px',
     }}>
       <div style={{
         fontFamily: 'JetBrains Mono, monospace',
         fontSize: '0.6rem',
-        color: '#52525b',
+        color: 'var(--text-faint)',
         textTransform: 'uppercase',
         letterSpacing: '0.08em',
         marginBottom: '4px',
@@ -316,7 +486,7 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
         fontFamily: 'Syne, sans-serif',
         fontSize: '1.25rem',
         fontWeight: 700,
-        color: '#f4f4f5',
+        color: 'var(--text-heading)',
         lineHeight: 1,
       }}>
         {value}
@@ -325,7 +495,7 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
         <div style={{
           fontFamily: 'JetBrains Mono, monospace',
           fontSize: '0.58rem',
-          color: '#3f3f46',
+          color: 'var(--text-number)',
           marginTop: '4px',
         }}>
           {sub}
@@ -342,6 +512,25 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
   const [lastUpdated, setLastUpdated] = useState(generatedAt);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredItems, setFilteredItems] = useState<NewsItem[] | null>(null);
+  const [theme, setTheme] = useState<Theme>('dark');
+
+  // Initialize theme from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('ai-pulse-theme') as Theme | null;
+    if (saved) {
+      setTheme(saved);
+      document.documentElement.setAttribute('data-theme', saved);
+    }
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    setTheme((prev) => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('ai-pulse-theme', next);
+      document.documentElement.setAttribute('data-theme', next);
+      return next;
+    });
+  }, []);
 
   const activeFeed = currentFeeds.find((f) => f.category === activeCategory);
   const totalItems = currentFeeds.reduce((sum, f) => sum + f.items.length, 0);
@@ -393,11 +582,11 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
     .slice(0, 12);
 
   return (
-    <div style={{ background: '#09090b', minHeight: '100vh', position: 'relative' }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100vh', position: 'relative', transition: 'background 0.3s ease' }}>
       {/* ── HEADER ── */}
       <header style={{
-        borderBottom: '1px solid rgba(255,255,255,0.07)',
-        background: 'rgba(9,9,11,0.95)',
+        borderBottom: '1px solid var(--border)',
+        background: 'var(--bg)',
         backdropFilter: 'blur(12px)',
         position: 'sticky',
         top: 0,
@@ -410,7 +599,7 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
               <div style={{
                 width: '28px',
                 height: '28px',
-                background: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
+                background: 'linear-gradient(135deg, var(--amber), var(--amber-bright))',
                 borderRadius: '4px',
                 display: 'flex',
                 alignItems: 'center',
@@ -424,7 +613,7 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
                   fontFamily: 'Syne, sans-serif',
                   fontSize: '1rem',
                   fontWeight: 800,
-                  color: '#f4f4f5',
+                  color: 'var(--text-heading)',
                   letterSpacing: '-0.02em',
                   lineHeight: 1,
                 }}>
@@ -433,7 +622,7 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
                 <div style={{
                   fontFamily: 'JetBrains Mono, monospace',
                   fontSize: '0.55rem',
-                  color: '#52525b',
+                  color: 'var(--text-faint)',
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
                 }}>
@@ -451,11 +640,11 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
                   width: '100%',
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  background: 'var(--input-bg)',
+                  border: '1px solid var(--input-border)',
                   borderRadius: '4px',
                   padding: '7px 12px',
-                  color: '#e4e4e7',
+                  color: 'var(--text)',
                   fontFamily: 'JetBrains Mono, monospace',
                   fontSize: '0.75rem',
                   outline: 'none',
@@ -464,7 +653,7 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
                   e.target.style.borderColor = 'rgba(245,158,11,0.4)';
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = 'rgba(255,255,255,0.08)';
+                  e.target.style.borderColor = 'var(--input-border)';
                 }}
               />
             </div>
@@ -477,7 +666,7 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
                 gap: '6px',
                 fontFamily: 'JetBrains Mono, monospace',
                 fontSize: '0.62rem',
-                color: '#52525b',
+                color: 'var(--text-faint)',
               }}>
                 <div
                   className="pulse-dot"
@@ -485,11 +674,15 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
                     width: '6px',
                     height: '6px',
                     borderRadius: '50%',
-                    background: '#22c55e',
+                    background: 'var(--green-dot)',
                   }}
                 />
                 Updated {timeAgo(lastUpdated)}
               </div>
+
+              {/* Theme Toggle */}
+              <ThemeToggle theme={theme} onToggle={toggleTheme} />
+
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
@@ -498,7 +691,7 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
                   background: 'transparent',
                   border: '1px solid rgba(245,158,11,0.3)',
                   borderRadius: '4px',
-                  color: '#f59e0b',
+                  color: 'var(--amber)',
                   fontFamily: 'JetBrains Mono, monospace',
                   fontSize: '0.68rem',
                   cursor: refreshing ? 'not-allowed' : 'pointer',
@@ -528,14 +721,14 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
                 fontFamily: 'Syne, sans-serif',
                 fontSize: '1rem',
                 fontWeight: 700,
-                color: '#f4f4f5',
+                color: 'var(--text-heading)',
               }}>
-                Search: "{searchQuery}"
+                Search: &ldquo;{searchQuery}&rdquo;
               </h2>
               <span style={{
                 fontFamily: 'JetBrains Mono, monospace',
                 fontSize: '0.65rem',
-                color: '#f59e0b',
+                color: 'var(--amber)',
               }}>
                 {filteredItems.length} results
               </span>
@@ -545,7 +738,7 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
                   marginLeft: 'auto',
                   background: 'transparent',
                   border: 'none',
-                  color: '#52525b',
+                  color: 'var(--text-faint)',
                   cursor: 'pointer',
                   fontFamily: 'JetBrains Mono, monospace',
                   fontSize: '0.7rem',
@@ -556,15 +749,15 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '8px' }}>
               {filteredItems.map((item, idx) => (
-                <NewsCard key={item.id} item={item} index={idx} />
+                <NewsCard key={item.id} item={item} index={idx} isResearch={item.category === 'research'} />
               ))}
               {filteredItems.length === 0 && (
-                <div style={{ color: '#52525b', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem', padding: '24px' }}>
+                <div style={{ color: 'var(--text-faint)', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem', padding: '24px' }}>
                   No results found.
                 </div>
               )}
             </div>
-            <div style={{ margin: '24px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }} />
+            <div style={{ margin: '24px 0', borderBottom: '1px solid var(--border)' }} />
           </div>
         )}
 
@@ -588,7 +781,7 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
           <div style={{
             fontFamily: 'JetBrains Mono, monospace',
             fontSize: '0.6rem',
-            color: '#52525b',
+            color: 'var(--text-faint)',
             textTransform: 'uppercase',
             letterSpacing: '0.08em',
             marginBottom: '10px',
@@ -602,10 +795,10 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
                 onClick={() => setSearchQuery(tag)}
                 style={{
                   padding: '4px 10px',
-                  background: TAG_COLORS[tag] ? TAG_COLORS[tag] + '12' : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${TAG_COLORS[tag] ? TAG_COLORS[tag] + '30' : 'rgba(255,255,255,0.08)'}`,
+                  background: TAG_COLORS[tag] ? TAG_COLORS[tag] + '12' : 'var(--source-bg)',
+                  border: `1px solid ${TAG_COLORS[tag] ? TAG_COLORS[tag] + '30' : 'var(--border)'}`,
                   borderRadius: '2px',
-                  color: TAG_COLORS[tag] || '#71717a',
+                  color: TAG_COLORS[tag] || 'var(--text-muted)',
                   fontFamily: 'JetBrains Mono, monospace',
                   fontSize: '0.65rem',
                   cursor: 'pointer',
@@ -641,7 +834,7 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
             <div style={{
               fontFamily: 'JetBrains Mono, monospace',
               fontSize: '0.6rem',
-              color: '#52525b',
+              color: 'var(--text-faint)',
               textTransform: 'uppercase',
               letterSpacing: '0.08em',
               padding: '0 4px',
@@ -663,14 +856,14 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
               <div style={{
                 marginTop: '16px',
                 padding: '12px',
-                background: '#111113',
-                border: '1px solid rgba(255,255,255,0.06)',
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border)',
                 borderRadius: '4px',
               }}>
                 <div style={{
                   fontFamily: 'JetBrains Mono, monospace',
                   fontSize: '0.58rem',
-                  color: '#52525b',
+                  color: 'var(--text-faint)',
                   marginBottom: '8px',
                   textTransform: 'uppercase',
                   letterSpacing: '0.06em',
@@ -680,11 +873,11 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
                 <div style={{
                   fontFamily: 'JetBrains Mono, monospace',
                   fontSize: '0.65rem',
-                  color: '#71717a',
+                  color: 'var(--text-muted)',
                   lineHeight: 1.8,
                 }}>
-                  <div>Stories: <span style={{ color: '#d4d4d8' }}>{activeFeed.items.length}</span></div>
-                  <div>Updated: <span style={{ color: '#d4d4d8' }}>{timeAgo(activeFeed.lastFetched)}</span></div>
+                  <div>Stories: <span style={{ color: 'var(--text-secondary)' }}>{activeFeed.items.length}</span></div>
+                  <div>Updated: <span style={{ color: 'var(--text-secondary)' }}>{timeAgo(activeFeed.lastFetched)}</span></div>
                 </div>
               </div>
             )}
@@ -709,7 +902,7 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
                       fontFamily: 'Syne, sans-serif',
                       fontSize: '1.1rem',
                       fontWeight: 700,
-                      color: '#f4f4f5',
+                      color: 'var(--text-heading)',
                       letterSpacing: '-0.02em',
                     }}>
                       {activeFeed.label}
@@ -717,7 +910,7 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
                     <div style={{
                       fontFamily: 'JetBrains Mono, monospace',
                       fontSize: '0.6rem',
-                      color: '#52525b',
+                      color: 'var(--text-faint)',
                       marginTop: '2px',
                     }}>
                       Top {activeFeed.items.length} stories · Updated {timeAgo(activeFeed.lastFetched)}
@@ -757,20 +950,20 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
             gap: '12px',
             marginBottom: '20px',
             paddingBottom: '12px',
-            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            borderBottom: '1px solid var(--border)',
           }}>
             <h2 style={{
               fontFamily: 'Syne, sans-serif',
               fontSize: '1rem',
               fontWeight: 700,
-              color: '#f4f4f5',
+              color: 'var(--text-heading)',
             }}>
               All Stories
             </h2>
             <span style={{
               fontFamily: 'JetBrains Mono, monospace',
               fontSize: '0.62rem',
-              color: '#52525b',
+              color: 'var(--text-faint)',
             }}>
               {totalItems} total across {currentFeeds.length} categories
             </span>
@@ -782,7 +975,7 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
           }}>
             {currentFeeds.flatMap((f) =>
               f.items.slice(0, 2).map((item) => (
-                <NewsCard key={item.id + '-overview'} item={item} index={0} />
+                <NewsCard key={item.id + '-overview'} item={item} index={0} isResearch={item.category === 'research'} />
               ))
             )}
           </div>
@@ -791,14 +984,14 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
 
       {/* ── FOOTER ── */}
       <footer style={{
-        borderTop: '1px solid rgba(255,255,255,0.06)',
+        borderTop: '1px solid var(--border)',
         padding: '24px',
         textAlign: 'center',
       }}>
         <div style={{
           fontFamily: 'JetBrains Mono, monospace',
           fontSize: '0.62rem',
-          color: '#3f3f46',
+          color: 'var(--text-number)',
           lineHeight: 2,
         }}>
           <div>⚡ AI PULSE — 360° AI Intelligence Feed</div>
@@ -807,7 +1000,7 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
             Data refreshes every hour ·{' '}
             <a
               href="https://github.com"
-              style={{ color: '#52525b', textDecoration: 'none' }}
+              style={{ color: 'var(--text-faint)', textDecoration: 'none' }}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -816,7 +1009,7 @@ export default function ClientDashboard({ feeds, generatedAt }: Props) {
             ·{' '}
             <a
               href="https://vercel.com"
-              style={{ color: '#52525b', textDecoration: 'none' }}
+              style={{ color: 'var(--text-faint)', textDecoration: 'none' }}
               target="_blank"
               rel="noopener noreferrer"
             >
